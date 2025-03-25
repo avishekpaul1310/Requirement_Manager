@@ -8,6 +8,7 @@ from .models import Organization, OrganizationMember, Project
 from .forms import OrganizationForm, ProjectForm, OrganizationMemberForm
 import json
 from requirements.models import Requirement
+from django.core.exceptions import PermissionDenied
 
 class DashboardView(LoginRequiredMixin, ListView):
     model = Organization
@@ -47,24 +48,39 @@ class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         """
         Check if the user is a member of the organization
         """
-        # Get the organization
-        organization = get_object_or_404(Organization, pk=self.kwargs['pk'])
-        
-        # Check if the current user is a member of this organization
-        is_member = organization.members.filter(user=self.request.user).exists()
-        
-        if not is_member:
-            # Log the failure for debugging
-            print(f"User {self.request.user} is not a member of organization {organization}")
-        
-        return is_member
+        try:
+            # Get the organization
+            organization = get_object_or_404(Organization, pk=self.kwargs['pk'])
+            
+            # Check if the current user is a member of this organization
+            is_member = organization.members.filter(user=self.request.user).exists()
+            
+            if not is_member:
+                # Log the failure for debugging
+                print(f"User {self.request.user} is not a member of organization {organization}")
+                return False
+            
+            return True
+        except Exception as e:
+            print(f"Error in test_func: {e}")
+            return False
+    
+    def handle_no_permission(self):
+        """
+        Override to provide more explicit handling of permission denial
+        """
+        if self.request.user.is_authenticated:
+            # User is logged in but doesn't have permission
+            raise PermissionDenied()
+        else:
+            # Redirect to login
+            return super().handle_no_permission()
     
     def get_queryset(self):
         """
         Filter organizations to only those the user is a member of
         """
-        user_orgs = Organization.objects.filter(members__user=self.request.user).distinct()
-        return user_orgs
+        return Organization.objects.filter(members__user=self.request.user).distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

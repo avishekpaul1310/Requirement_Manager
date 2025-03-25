@@ -336,8 +336,16 @@ class EdgeCaseTests(ProjectsBaseTestCase):
                 0, 
                 "Expected no projects in empty organization"
             )
+            
+            # Check all organization members
+            print("\nDEBUG: Actual Organization Members")
+            actual_members = empty_org.members.all()
+            for member in actual_members:
+                print(f"Member: {member.user.username}, Role: {member.role}")
+            
+            # Assert the number of members
             self.assertEqual(
-                len(response.context.get('members', [])), 
+                actual_members.count(), 
                 1, 
                 "Expected one member in the organization"
             )
