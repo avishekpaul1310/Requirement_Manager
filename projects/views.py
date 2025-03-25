@@ -43,6 +43,10 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
     template_name = 'projects/organization_detail.html'
     context_object_name = 'organization'
     
+    def get_queryset(self):
+        # Override to filter organizations the user is a member of
+        return Organization.objects.filter(members__user=self.request.user).distinct()
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['projects'] = self.object.projects.all()
