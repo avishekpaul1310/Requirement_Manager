@@ -1,0 +1,114 @@
+<!-- templates/projects/organization_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ organization.name }} | Requirements Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ organization.name }}</h2>
+    <div>
+        <a href="{% url 'project-create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> New Project
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <p>{{ organization.description }}</p>
+                <p class="text-muted mb-0">Created: {{ organization.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if projects %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr>
+                                <td><a href="{% url 'project-detail' project.id %}">{{ project.name }}</a></td>
+                                <td>{{ project.description|truncatechars:100 }}</td>
+                                <td>{{ project.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'project-detail' project.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    No projects yet. <a href="{% url 'project-create' %}">Create your first project</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Members</h5>
+            </div>
+            <div class="card-body">
+                {% if members %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr>
+                                <td>{{ member.user.username }}</td>
+                                <td>
+                                    {% if member.role == 'admin' %}
+                                    <span class="badge bg-primary">Admin</span>
+                                    {% elif member.role == 'member' %}
+                                    <span class="badge bg-info">Member</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Viewer</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    No members yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

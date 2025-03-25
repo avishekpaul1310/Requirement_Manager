@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} | Requirements Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ project.name }}</h2>
+    <div>
+        <a href="{% url 'requirement-create' project.id %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Add Requirement
+        </a>
+        <a href="{% url 'requirement-list' project.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-list"></i> View All Requirements
+        </a>
+        <a href="{% url 'traceability-matrix' project.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-grid-3x3"></i> Traceability Matrix
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <p>{{ project.description }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Organization:</strong> <a href="{% url 'organization-detail' project.organization.id %}">{{ project.organization.name }}</a></p>
+                        <p class="mb-1"><strong>Created by:</strong> {{ project.created_by.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Created at:</strong> {{ project.created_at|date:"M d, Y" }}</p>
+                        <p class="mb-1"><strong>Last updated:</strong> {{ project.updated_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Requirements Overview</h5>
+            </div>
+            <div class="card-body">
+                {% if requirements %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requirements|slice:":10" %}
+                            <tr>
+                                <td>{{ req.identifier }}</td>
+                                <td><a href="{% url 'requirement-detail' req.id %}">{{ req.title }}</a></td>
+                                <td>
+                                    {% if req.status == 'Draft' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                    {% elif req.status == 'In Review' %}
+                                    <span class="badge bg-info">In Review</span>
+                                    {% elif req.status == 'Approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% elif req.status == 'Rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% elif req.status == 'Implemented' %}
+                                    <span class="badge bg-primary">Implemented</span>
+                                    {% elif req.status == 'Verified' %}
+                                    <span class="badge bg-dark">Verified</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if req.priority == 'High' %}
+                                    <span class="badge bg-danger">High</span>
+                                    {% elif req.priority == 'Medium' %}
+                                    <span class="badge bg-warning text-dark">Medium</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'requirement-detail' req.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'requirement-update' req.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if requirements.count > 10 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'requirement-list' project.id %}" class="btn btn-outline-primary">View All Requirements</a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-info">
+                    No requirements yet. <a href="{% url 'requirement-create' project.id %}">Create your first requirement</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Requirement Stats</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Project Objectives</h5>
+                <a href="{% url 'objective-create' project.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if project.objectives.all %}
+                <div class="list-group list-group-flush">
+                    {% for objective in project.objectives.all %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ objective.title }}</h6>
+                        {% if objective.description %}
+                        <small class="text-muted">{{ objective.description|truncatechars:100 }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="card-body">
+                    <p class="text-muted">No objectives defined yet.</p>
+                    <a href="{% url 'objective-create' project.id %}" class="btn btn-sm btn-outline-primary">Add Objective</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if categories %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Categories</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for category in categories %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ category.name }}</h6>
+                            <span class="badge bg-secondary">{{ category.requirements.count }}</span>
+                        </div>
+                        {% if category.description %}
+                        <small class="text-muted">{{ category.description|truncatechars:100 }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'category-create' project.id %}" class="btn btn-sm btn-outline-primary">Add Category</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Categories</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">No categories yet.</p>
+                <a href="{% url 'category-create' project.id %}" class="btn btn-sm btn-outline-primary">Add Category</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('statusChart').getContext('2d');
+    
+    // Define status data
+    var chartData = {
+        labels: JSON.parse('{{ status_labels|escapejs }}'),
+        datasets: [{
+            data: JSON.parse('{{ status_counts|escapejs }}'),
+            backgroundColor: [
+                '#6c757d',  // Draft
+                '#17a2b8',  // In Review
+                '#28a745',  // Approved
+                '#dc3545',  // Rejected
+                '#007bff',  // Implemented
+                '#343a40'   // Verified
+            ]
+        }]
+    };
+    
+    var chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

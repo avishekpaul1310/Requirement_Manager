@@ -1,0 +1,40 @@
+<!-- templates/projects/organization_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Organizations | Requirements Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Organizations</h2>
+    <div>
+        <a href="{% url 'organization-create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> New Organization
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% if organizations %}
+        {% for organization in organizations %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ organization.name }}</h5>
+                    <p class="card-text text-muted">{{ organization.description|truncatechars:100 }}</p>
+                    <p class="card-text"><small class="text-muted">{{ organization.projects.count }} projects</small></p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'organization-detail' organization.id %}" class="btn btn-outline-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                No organizations found. <a href="{% url 'organization-create' %}">Create your first organization</a>.
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+<!-- templates/requirements/requirement_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Requirements | {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Requirements for {{ project.name }}</h2>
+    <div>
+        <a href="{% url 'requirement-create' project.id %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Add Requirement
+        </a>
+        <a href="{% url 'export-requirements' project.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Filter Requirements</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        {{ filter.form.title.label_tag }}
+                        {{ filter.form.title }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter.form.status.label_tag }}
+                        {{ filter.form.status }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter.form.priority.label_tag }}
+                        {{ filter.form.priority }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter.form.type.label_tag }}
+                        {{ filter.form.type }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ filter.form.category.label_tag }}
+                        {{ filter.form.category }}
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{% url 'requirement-list' project.id %}" class="btn btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#all" data-bs-toggle="tab">All</a>
+                    </li>
+                    {% for status, count in status_counts.items %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#{{ status.0 }}" data-bs-toggle="tab">
+                            {{ status.1 }} <span class="badge bg-secondary">{{ count }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="all">
+                        {% if requirements %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in requirements %}
+                                    <tr>
+                                        <td>{{ req.identifier }}</td>
+                                        <td>
+                                            <a href="{% url 'requirement-detail' req.id %}">{{ req.title }}</a>
+                                            {% if req.children.exists %}
+                                            <span class="badge bg-info ms-1" title="Has child requirements">
+                                                <i class="bi bi-diagram-3"></i>
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ req.get_type_display }}</td>
+                                        <td>
+                                            {% if req.priority == 'High' %}
+                                            <span class="badge bg-danger">High</span>
+                                            {% elif req.priority == 'Medium' %}
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if req.status == 'Draft' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                            {% elif req.status == 'In Review' %}
+                                            <span class="badge bg-info">In Review</span>
+                                            {% elif req.status == 'Approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                            {% elif req.status == 'Rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                            {% elif req.status == 'Implemented' %}
+                                            <span class="badge bg-primary">Implemented</span>
+                                            {% elif req.status == 'Verified' %}
+                                            <span class="badge bg-dark">Verified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ req.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'requirement-detail' req.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'requirement-update' req.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            No requirements found. <a href="{% url 'requirement-create' project.id %}">Create your first requirement</a>.
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% for status_code, _ in request.status_choices %}
+                    <div class="tab-pane fade" id="{{ status_code }}">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Priority</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in requirements %}
+                                    {% if req.status == status_code %}
+                                    <tr>
+                                        <td>{{ req.identifier }}</td>
+                                        <td><a href="{% url 'requirement-detail' req.id %}">{{ req.title }}</a></td>
+                                        <td>{{ req.get_type_display }}</td>
+                                        <td>
+                                            {% if req.priority == 'High' %}
+                                            <span class="badge bg-danger">High</span>
+                                            {% elif req.priority == 'Medium' %}
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ req.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'requirement-detail' req.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'requirement-update' req.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

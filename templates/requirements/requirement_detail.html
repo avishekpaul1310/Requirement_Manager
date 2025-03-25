@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ requirement.identifier }} - {{ requirement.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'project-detail' requirement.project.id %}">{{ requirement.project.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'requirement-list' requirement.project.id %}">Requirements</a></li>
+            <li class="breadcrumb-item active">{{ requirement.identifier }}</li>
+        </ol>
+    </nav>
+    <div>
+        <a href="{% url 'requirement-update' requirement.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">{{ requirement.identifier }} - {{ requirement.title }}</h5>
+                <span>
+                    {% if requirement.status == 'Draft' %}
+                    <span class="badge bg-secondary">Draft</span>
+                    {% elif requirement.status == 'In Review' %}
+                    <span class="badge bg-info">In Review</span>
+                    {% elif requirement.status == 'Approved' %}
+                    <span class="badge bg-success">Approved</span>
+                    {% elif requirement.status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                    {% elif requirement.status == 'Implemented' %}
+                    <span class="badge bg-primary">Implemented</span>
+                    {% elif requirement.status == 'Verified' %}
+                    <span class="badge bg-dark">Verified</span>
+                    {% endif %}
+                    
+                    {% if requirement.priority == 'High' %}
+                    <span class="badge bg-danger">High Priority</span>
+                    {% elif requirement.priority == 'Medium' %}
+                    <span class="badge bg-warning text-dark">Medium Priority</span>
+                    {% else %}
+                    <span class="badge bg-success">Low Priority</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ requirement.get_type_display }}</h6>
+                
+                <h5 class="mt-4">Description</h5>
+                <p class="card-text">{{ requirement.description|linebreaks }}</p>
+                
+                {% if requirement.acceptance_criteria %}
+                <h5 class="mt-4">Acceptance Criteria</h5>
+                <p class="card-text">{{ requirement.acceptance_criteria|linebreaks }}</p>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Created by:</strong> {{ requirement.created_by.username }}</p>
+                            <p class="mb-1"><strong>Created at:</strong> {{ requirement.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if requirement.updated_by %}
+                            <p class="mb-1"><strong>Updated by:</strong> {{ requirement.updated_by.username }}</p>
+                            {% endif %}
+                            <p class="mb-1"><strong>Updated at:</strong> {{ requirement.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <h6 class="mb-3">Change Status:</h6>
+                <div class="btn-group">
+                    {% for status_code, status_name in requirement.STATUS_CHOICES %}
+                    <form method="post" action="{% url 'requirement-status-update' requirement.id status_code %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if requirement.status == status_code %}btn-primary{% else %}btn-outline-secondary{% endif %}" {% if requirement.status == status_code %}disabled{% endif %}>
+                            {{ status_name }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Metadata and relationships -->
+        {% if requirement.category %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Category</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ requirement.category.name }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if requirement.objectives.exists %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Related Objectives</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for objective in requirement.objectives.all %}
+                    <li class="list-group-item">
+                        {{ objective.title }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if requirement.parent %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Parent Requirement</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'requirement-detail' requirement.parent.id %}">
+                    {{ requirement.parent.identifier }} - {{ requirement.parent.title }}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if children %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Child Requirements</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for child in children %}
+                    <li class="list-group-item">
+                        <a href="{% url 'requirement-detail' child.id %}">
+                            {{ child.identifier }} - {{ child.title }}
+                        </a>
+                        <span class="badge {% if child.status == 'Approved' %}bg-success{% elif child.status == 'Rejected' %}bg-danger{% else %}bg-secondary{% endif %} float-end">
+                            {{ child.get_status_display }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if related %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Related Requirements</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for rel in related %}
+                    <li class="list-group-item">
+                        <a href="{% url 'requirement-detail' rel.id %}">
+                            {{ rel.identifier }} - {{ rel.title }}
+                        </a>
+                        <span class="badge {% if rel.status == 'Approved' %}bg-success{% elif rel.status == 'Rejected' %}bg-danger{% else %}bg-secondary{% endif %} float-end">
+                            {{ rel.get_status_display }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if history %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">History</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for entry in history %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                {% if entry.status == 'Draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                                {% elif entry.status == 'In Review' %}
+                                <span class="badge bg-info">In Review</span>
+                                {% elif entry.status == 'Approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif entry.status == 'Rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% elif entry.status == 'Implemented' %}
+                                <span class="badge bg-primary">Implemented</span>
+                                {% elif entry.status == 'Verified' %}
+                                <span class="badge bg-dark">Verified</span>
+                                {% endif %}
+                            </span>
+                            <small class="text-muted">{{ entry.timestamp|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <p class="mb-0 mt-1">{{ entry.notes }}</p>
+                        <small class="text-muted">by {{ entry.changed_by.username }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

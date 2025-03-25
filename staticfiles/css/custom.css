@@ -1,0 +1,87 @@
+/* static/css/custom.css */
+/* Override Bootstrap variables */
+:root {
+    --bs-primary: #0066cc;
+    --bs-primary-rgb: 0, 102, 204;
+}
+
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Card styles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Table styles */
+.table th {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Form styles */
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Badge styles */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+}
+
+/* Requirement status transitions */
+.status-workflow .btn-group {
+    flex-wrap: wrap;
+}
+
+.status-workflow .btn {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Requirements tree view */
+.req-tree-item {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+}
+
+.req-tree-children {
+    margin-left: 1.5rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid #dee2e6;
+}
+
+/* Dashboard cards */
+.dashboard-stat-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.dashboard-stat-number {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+}

@@ -1,0 +1,166 @@
+<!-- templates/requirements/requirement_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}
+    Edit Requirement {{ form.instance.identifier }}
+    {% else %}
+    Create New Requirement
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'project-detail' project.id %}">{{ project.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'requirement-list' project.id %}">Requirements</a></li>
+            <li class="breadcrumb-item active">
+                {% if form.instance.pk %}
+                Edit {{ form.instance.identifier }}
+                {% else %}
+                New Requirement
+                {% endif %}
+            </li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if form.instance.pk %}
+                    Edit Requirement {{ form.instance.identifier }}
+                    {% else %}
+                    Create New Requirement
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+                            {{ form.title.errors }}
+                            <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" class="form-control {% if form.title.errors %}is-invalid{% endif %}" value="{{ form.title.value|default:'' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                            {{ form.description.errors }}
+                            <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="4" required>{{ form.description.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.acceptance_criteria.id_for_label }}" class="form-label">Acceptance Criteria</label>
+                            {{ form.acceptance_criteria.errors }}
+                            <textarea name="{{ form.acceptance_criteria.name }}" id="{{ form.acceptance_criteria.id_for_label }}" class="form-control {% if form.acceptance_criteria.errors %}is-invalid{% endif %}" rows="3">{{ form.acceptance_criteria.value|default:'' }}</textarea>
+                            <div class="form-text">Specific conditions that must be met for this requirement to be considered complete.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.type.id_for_label }}" class="form-label">Type *</label>
+                            {{ form.type.errors }}
+                            <select name="{{ form.type.name }}" id="{{ form.type.id_for_label }}" class="form-select {% if form.type.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.type.choices %}
+                                <option value="{{ value }}" {% if form.type.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">Priority *</label>
+                            {{ form.priority.errors }}
+                            <select name="{{ form.priority.name }}" id="{{ form.priority.id_for_label }}" class="form-select {% if form.priority.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.priority.choices %}
+                                <option value="{{ value }}" {% if form.priority.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                            {{ form.status.errors }}
+                            <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}" class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.status.choices %}
+                                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category.errors }}
+                            <div class="input-group">
+                                <select name="{{ form.category.name }}" id="{{ form.category.id_for_label }}" class="form-select {% if form.category.errors %}is-invalid{% endif %}">
+                                    <option value="">---------</option>
+                                    {% for category in form.fields.category.queryset %}
+                                    <option value="{{ category.id }}" {% if form.category.value|stringformat:"i" == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{% url 'category-create' project.id %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-plus"></i> New
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <label for="{{ form.parent.id_for_label }}" class="form-label">Parent Requirement</label>
+                            {{ form.parent.errors }}
+                            <select name="{{ form.parent.name }}" id="{{ form.parent.id_for_label }}" class="form-select {% if form.parent.errors %}is-invalid{% endif %}">
+                                <option value="">---------</option>
+                                {% for parent in form.fields.parent.queryset %}
+                                {% if parent.id != form.instance.id %}
+                                <option value="{{ parent.id }}" {% if form.parent.value|stringformat:"i" == parent.id|stringformat:"i" %}selected{% endif %}>{{ parent.identifier }} - {{ parent.title }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.related_requirements.id_for_label }}" class="form-label">Related Requirements</label>
+                            {{ form.related_requirements.errors }}
+                            <select name="{{ form.related_requirements.name }}" id="{{ form.related_requirements.id_for_label }}" class="form-select {% if form.related_requirements.errors %}is-invalid{% endif %}" multiple size="6">
+                                <!-- templates/requirements/requirement_form.html (continued) -->
+                                {% for related in form.fields.related_requirements.queryset %}
+                                {% if related.id != form.instance.id %}
+                                <option value="{{ related.id }}" {% if related.id|stringformat:"i" in form.related_requirements.value|stringformat:"s" %}selected{% endif %}>{{ related.identifier }} - {{ related.title }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple requirements.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}
+                                Update Requirement
+                                {% else %}
+                                Create Requirement
+                                {% endif %}
+                            </button>
+                            <a href="{% if form.instance.pk %}{% url 'requirement-detail' form.instance.id %}{% else %}{% url 'requirement-list' project.id %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

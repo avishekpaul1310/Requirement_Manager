@@ -1,0 +1,101 @@
+<!-- templates/requirements/traceability_matrix.html -->
+{% extends 'base.html' %}
+
+{% block title %}Traceability Matrix | {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'project-detail' project.id %}">{{ project.name }}</a></li>
+            <li class="breadcrumb-item active">Traceability Matrix</li>
+        </ol>
+    </nav>
+    <div>
+        <a href="{% url 'objective-create' project.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-plus"></i> Add Objective
+        </a>
+    </div>
+</div>
+
+{% if objectives %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Requirements Traceability Matrix</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 200px">Requirements</th>
+                        {% for objective in objectives %}
+                        <th class="text-center">{{ objective.title }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category, reqs in categorized_requirements.items %}
+                    <tr class="table-secondary">
+                        <th colspan="{{ objectives.count|add:1 }}">
+                            {% if category == 'Uncategorized' %}
+                            Uncategorized
+                            {% else %}
+                            {{ category.name }}
+                            {% endif %}
+                        </th>
+                    </tr>
+                    {% for req in reqs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'requirement-detail' req.id %}">
+                                {{ req.identifier }} - {{ req.title }}
+                            </a>
+                        </td>
+                        {% for objective in objectives %}
+                        <td class="text-center align-middle">
+                            {% if objective in req.objectives.all %}
+                            <span class="text-success"><i class="bi bi-check-lg"></i></span>
+                            {% else %}
+                            <form method="post" action="{% url 'requirement-add-objective' req.id objective.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <p>No project objectives defined yet. The traceability matrix shows how requirements align with project objectives.</p>
+    <a href="{% url 'objective-create' project.id %}" class="btn btn-primary">
+        Create your first objective
+    </a>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">About Requirements Traceability Matrix</h5>
+    </div>
+    <div class="card-body">
+        <p>A requirements traceability matrix helps ensure that all requirements are linked to project objectives, making it easier to:</p>
+        <ul>
+            <li>Verify that all requirements support at least one objective</li>
+            <li>Identify objectives that may not be sufficiently supported by requirements</li>
+            <li>Analyze the impact of changes to requirements or objectives</li>
+            <li>Ensure complete requirements coverage</li>
+        </ul>
+        <p>Use this matrix to check alignment between your project's requirements and objectives.</p>
+    </div>
+</div>
+{% endblock %}

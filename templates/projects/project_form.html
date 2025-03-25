@@ -1,0 +1,80 @@
+<!-- templates/projects/project_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}
+    Edit Project
+    {% else %}
+    Create New Project
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        {% if form.instance.pk %}
+        Edit Project
+        {% else %}
+        Create New Project
+        {% endif %}
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if form.instance.pk %}
+                    Edit {{ form.instance.name }}
+                    {% else %}
+                    Project Details
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Project Name *</label>
+                        {{ form.name.errors }}
+                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                        <div class="form-text">Enter a descriptive name for your project.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description.errors }}
+                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="3">{{ form.description.value|default:'' }}</textarea>
+                        <div class="form-text">Briefly describe the purpose and scope of this project.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.organization.id_for_label }}" class="form-label">Organization *</label>
+                        {{ form.organization.errors }}
+                        <select name="{{ form.organization.name }}" id="{{ form.organization.id_for_label }}" class="form-select {% if form.organization.errors %}is-invalid{% endif %}" required>
+                            <option value="">Select an organization</option>
+                            {% for org in form.fields.organization.queryset %}
+                            <option value="{{ org.id }}" {% if form.organization.value|stringformat:"i" == org.id|stringformat:"i" %}selected{% endif %}>{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select which organization this project belongs to.</div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.pk %}
+                            Update Project
+                            {% else %}
+                            Create Project
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'project-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
