@@ -21,6 +21,9 @@ class RequirementForm(forms.ModelForm):
         project = kwargs.pop('project', None)
         super().__init__(*args, **kwargs)
         
+        # Make description required
+        self.fields['description'].required = True
+        
         if project:
             # Filter categories by project
             self.fields['category'].queryset = RequirementCategory.objects.filter(project=project)

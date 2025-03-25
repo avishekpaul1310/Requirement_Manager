@@ -76,13 +76,33 @@ class Requirement(models.Model):
         if len(self.title) > 200:
             self.title = self.title[:200]
         
+        # Generate a unique identifier if not already set
+        if not self.identifier:
+            # Get the highest identifier number for this project
+            from django.db.models import Max
+            from django.db.models.functions import Substr, Cast
+            from django.db.models import IntegerField
+            
+            last_req = Requirement.objects.filter(project=self.project).annotate(
+                num=Cast(
+                    Substr('identifier', 5),  # Extract the number part after "REQ-"
+                    IntegerField()
+                )
+            ).aggregate(max_num=Max('num'))
+            
+            next_num = 1
+            if last_req['max_num'] is not None:
+                next_num = last_req['max_num'] + 1
+                
+            self.identifier = f"REQ-{next_num:03d}"
+        
         # Get the current instance if it exists
         try:
             old_instance = Requirement.objects.get(pk=self.pk)
         except Requirement.DoesNotExist:
             old_instance = None
         
-        # Call the parent save method first
+        # Call the parent save method
         super().save(*args, **kwargs)
         
         # Track status changes if enabled in settings
