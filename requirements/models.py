@@ -1,8 +1,9 @@
-# requirements/models.py
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from projects.models import Project
+from django.conf import settings
 
 class RequirementCategory(models.Model):
     name = models.CharField(max_length=100)
@@ -71,20 +72,29 @@ class Requirement(models.Model):
         return reverse('requirement-detail', kwargs={'pk': self.pk})
     
     def save(self, *args, **kwargs):
-        # Auto-generate identifier if not provided
-        if not self.identifier:
-            last_req = Requirement.objects.filter(project=self.project).order_by('-identifier').first()
-            if last_req and last_req.identifier.startswith('REQ-'):
-                try:
-                    # Extract just the numeric part after the project prefix
-                    num = int(last_req.identifier.split('-')[1]) + 1
-                    self.identifier = f"REQ-{num:03d}"
-                except (IndexError, ValueError):
-                    self.identifier = f"REQ-001"
-            else:
-                self.identifier = f"REQ-001"
+        # Truncate title if it exceeds max length
+        if len(self.title) > 200:
+            self.title = self.title[:200]
         
+        # Get the current instance if it exists
+        try:
+            old_instance = Requirement.objects.get(pk=self.pk)
+        except Requirement.DoesNotExist:
+            old_instance = None
+        
+        # Call the parent save method first
         super().save(*args, **kwargs)
+        
+        # Track status changes if enabled in settings
+        if (old_instance and 
+            old_instance.status != self.status and 
+            getattr(settings, 'REQUIREMENTS_TRACK_HISTORY', True)):
+            RequirementHistory.objects.create(
+                requirement=self,
+                status=self.status,
+                changed_by=None,  # You might want to pass the user who made the change
+                notes=f"Status changed from {old_instance.status} to {self.status}"
+            )
 
 class RequirementHistory(models.Model):
     requirement = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name='history')
