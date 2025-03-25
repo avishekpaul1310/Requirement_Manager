@@ -1,0 +1,24 @@
+# Core Django
+Django==5.1.7
+
+# Database
+# If you plan to use PostgreSQL in production:
+# psycopg2-binary==2.9.9
+
+# Form handling and filtering
+django-filter==23.3
+
+# Static file serving
+whitenoise==6.5.0
+
+# UI/Frontend
+# Bootstrap is loaded from CDN, so not required here
+
+# Development tools
+# The following are optional but recommended
+django-debug-toolbar==4.2.0
+pytest-django==4.5.2
+coverage==7.3.2
+
+# Production (when deploying)
+gunicorn==21.2.0
