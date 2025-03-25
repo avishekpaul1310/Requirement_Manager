@@ -46,17 +46,25 @@ class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
     def test_func(self):
         """
         Check if the user is a member of the organization
-        This method is part of UserPassesTestMixin
         """
         # Get the organization
         organization = get_object_or_404(Organization, pk=self.kwargs['pk'])
         
         # Check if the current user is a member of this organization
-        return organization.members.filter(user=self.request.user).exists()
+        is_member = organization.members.filter(user=self.request.user).exists()
+        
+        if not is_member:
+            # Log the failure for debugging
+            print(f"User {self.request.user} is not a member of organization {organization}")
+        
+        return is_member
     
     def get_queryset(self):
-        # Filter organizations the user is a member of
-        return Organization.objects.filter(members__user=self.request.user).distinct()
+        """
+        Filter organizations to only those the user is a member of
+        """
+        user_orgs = Organization.objects.filter(members__user=self.request.user).distinct()
+        return user_orgs
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
