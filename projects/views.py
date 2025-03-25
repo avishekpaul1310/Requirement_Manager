@@ -38,13 +38,24 @@ class OrganizationListView(LoginRequiredMixin, ListView):
         user = self.request.user
         return Organization.objects.filter(members__user=user).distinct()
 
-class OrganizationDetailView(LoginRequiredMixin, DetailView):
+class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = 'projects/organization_detail.html'
     context_object_name = 'organization'
     
+    def test_func(self):
+        """
+        Check if the user is a member of the organization
+        This method is part of UserPassesTestMixin
+        """
+        # Get the organization
+        organization = get_object_or_404(Organization, pk=self.kwargs['pk'])
+        
+        # Check if the current user is a member of this organization
+        return organization.members.filter(user=self.request.user).exists()
+    
     def get_queryset(self):
-        # Override to filter organizations the user is a member of
+        # Filter organizations the user is a member of
         return Organization.objects.filter(members__user=self.request.user).distinct()
     
     def get_context_data(self, **kwargs):
