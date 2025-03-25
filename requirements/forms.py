@@ -21,7 +21,7 @@ class RequirementForm(forms.ModelForm):
         project = kwargs.pop('project', None)
         super().__init__(*args, **kwargs)
         
-        # Make description required
+        # Explicitly make description required
         self.fields['description'].required = True
         
         if project:

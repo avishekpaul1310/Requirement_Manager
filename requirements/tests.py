@@ -481,16 +481,28 @@ class EdgeCaseTests(RequirementsBaseTestCase):
             'Draft', 'In Review', 'Approved', 'Implemented', 'Verified'
         ]
         
-        for status in valid_status_transitions:
-            self.requirement.status = status
-            self.requirement.save()
-            
-            # Check history tracking
-            history = RequirementHistory.objects.filter(
-                requirement=self.requirement, 
-                status=status
-            )
-            self.assertTrue(history.exists())
+        # Make sure history tracking is enabled for this test
+        with self.settings(REQUIREMENTS_TRACK_HISTORY=True):
+            for status in valid_status_transitions:
+                # Get the current status before changing
+                old_status = self.requirement.status
+                
+                # Set the new status and save
+                self.requirement.status = status
+                self.requirement.save()
+                
+                # Explicitly check that a history entry was created for this transition
+                history = RequirementHistory.objects.filter(
+                    requirement=self.requirement, 
+                    status=status
+                )
+                self.assertTrue(
+                    history.exists(),
+                    f"No history entry was created for transition from {old_status} to {status}"
+                )
+                
+                # Refresh the requirement from the database for the next iteration
+                self.requirement.refresh_from_db()
 
 
 if __name__ == '__main__':

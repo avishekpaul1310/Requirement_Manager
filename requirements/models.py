@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from projects.models import Project
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RequirementCategory(models.Model):
     name = models.CharField(max_length=100)
@@ -72,6 +75,9 @@ class Requirement(models.Model):
         return reverse('requirement-detail', kwargs={'pk': self.pk})
     
     def save(self, *args, **kwargs):
+        # Extract user from kwargs if present
+        user = kwargs.pop('user', None)
+        
         # Truncate title if it exceeds max length
         if len(self.title) > 200:
             self.title = self.title[:200]
@@ -104,6 +110,10 @@ class Requirement(models.Model):
         
         # Call the parent save method
         super().save(*args, **kwargs)
+
+        logger.debug(f"Saving requirement {self.pk} with status {self.status}")
+        if old_instance:
+            logger.debug(f"Previous status was {old_instance.status}")
         
         # Track status changes if enabled in settings
         if (old_instance and 
@@ -112,10 +122,10 @@ class Requirement(models.Model):
             RequirementHistory.objects.create(
                 requirement=self,
                 status=self.status,
-                changed_by=None,  # You might want to pass the user who made the change
+                changed_by=user,  # Now using the user parameter
                 notes=f"Status changed from {old_instance.status} to {self.status}"
             )
-
+        
 class RequirementHistory(models.Model):
     requirement = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name='history')
     status = models.CharField(max_length=20)
