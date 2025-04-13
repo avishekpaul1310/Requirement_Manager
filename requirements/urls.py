@@ -12,6 +12,7 @@ urlpatterns = [
     # Create and update views
     path('project/<int:project_id>/create/', views.RequirementCreateView.as_view(), name='requirement-create'),
     path('<int:pk>/update/', views.RequirementUpdateView.as_view(), name='requirement-update'),
+    path('<int:pk>/delete/', views.RequirementDeleteView.as_view(), name='requirement-delete'),
     
     # Category views
     path('project/<int:project_id>/category/create/', views.RequirementCategoryCreateView.as_view(), name='category-create'),

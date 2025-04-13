@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Requirement | Requirements Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="card-title mb-0">Confirm Requirement Deletion</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Warning: This action cannot be undone.
+                </div>
+                
+                <p class="mb-4">Are you sure you want to delete the requirement <strong>"{{ object.identifier }}: {{ object.title }}"</strong>?</p>
+                
+                <div class="alert alert-danger">
+                    <p><strong>This will delete:</strong></p>
+                    <ul>
+                        <li>All history associated with this requirement</li>
+                        <li>All relationships to other requirements</li>
+                        <li>All links to project objectives</li>
+                    </ul>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'requirement-detail' object.pk %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Delete Requirement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

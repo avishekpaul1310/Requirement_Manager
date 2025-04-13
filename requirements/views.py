@@ -1,7 +1,7 @@
 # requirements/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.http import HttpResponse
@@ -253,3 +253,44 @@ class RequirementAddObjectiveView(LoginRequiredMixin, View):
         
         messages.success(request, f"Requirement {requirement.identifier} linked to objective: {objective.title}")
         return redirect('traceability-matrix', project_id=requirement.project.id)
+
+class RequirementDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Requirement
+    template_name = 'requirements/requirement_confirm_delete.html'
+    
+    def test_func(self):
+        """
+        Check if the user is the requirement creator or an admin of the organization
+        """
+        requirement = self.get_object()
+        user = self.request.user
+        
+        # Check if user is requirement creator
+        if requirement.created_by == user:
+            return True
+            
+        # Check if user is project creator
+        if requirement.project.created_by == user:
+            return True
+            
+        # Check if user is an admin in the organization
+        if requirement.project.organization:
+            is_admin = requirement.project.organization.members.filter(
+                user=user, 
+                role='admin'
+            ).exists()
+            if is_admin:
+                return True
+                
+        return False
+    
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            messages.error(self.request, "You don't have permission to delete this requirement.")
+            return redirect('requirement-detail', pk=self.get_object().pk)
+        return super().handle_no_permission()
+        
+    def get_success_url(self):
+        project_id = self.object.project.id
+        messages.success(self.request, f'Requirement "{self.object.identifier}: {self.object.title}" was deleted successfully!')
+        return reverse('project-detail', kwargs={'pk': project_id})

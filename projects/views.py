@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.contrib.auth import login
 from .models import Organization, OrganizationMember, Project
@@ -172,3 +172,39 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
         form.instance.created_by = self.request.user
         messages.success(self.request, 'Project created successfully!')
         return super().form_valid(form)
+
+class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Project
+    template_name = 'projects/project_confirm_delete.html'
+    
+    def test_func(self):
+        """
+        Check if the user is the project creator or an admin of the organization
+        """
+        project = self.get_object()
+        user = self.request.user
+        
+        # Check if user is project creator
+        if project.created_by == user:
+            return True
+            
+        # Check if user is an admin in the organization
+        is_admin = project.organization.members.filter(
+            user=user, 
+            role='admin'
+        ).exists()
+        
+        return is_admin
+    
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            messages.error(self.request, "You don't have permission to delete this project.")
+            return redirect('project-detail', pk=self.get_object().pk)
+        return super().handle_no_permission()
+        
+    def get_success_url(self):
+        messages.success(self.request, f'Project "{self.object.name}" was deleted successfully!')
+        if self.object.organization:
+            return reverse('organization-detail', kwargs={'pk': self.object.organization.pk})
+        else:
+            return reverse_lazy('project-list')

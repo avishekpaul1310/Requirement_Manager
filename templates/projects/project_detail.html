@@ -15,6 +15,9 @@
         <a href="{% url 'traceability-matrix' project.id %}" class="btn btn-outline-primary">
             <i class="bi bi-grid-3x3"></i> Traceability Matrix
         </a>
+        <a href="{% url 'project-delete' project.id %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Delete Project
+        </a>
     </div>
 </div>
 
@@ -92,6 +95,9 @@
                                     </a>
                                     <a href="{% url 'requirement-update' req.id %}" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'requirement-delete' req.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
                                     </a>
                                 </td>
                             </tr>
