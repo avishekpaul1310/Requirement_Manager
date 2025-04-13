@@ -4,11 +4,24 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth import login
 from .models import Organization, OrganizationMember, Project
-from .forms import OrganizationForm, ProjectForm, OrganizationMemberForm
+from .forms import OrganizationForm, ProjectForm, OrganizationMemberForm, UserRegistrationForm
 import json
 from requirements.models import Requirement
 from django.core.exceptions import PermissionDenied
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Account created successfully! Welcome, {user.username}!')
+            return redirect('dashboard')
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'registration/register.html', {'form': form})
 
 class DashboardView(LoginRequiredMixin, ListView):
     model = Organization
